@@ -1,0 +1,42 @@
+Metadata-Version: 2.4
+Name: ml-validation-toolkit
+Version: 0.1.0
+Summary: Reusable data-quality, model-validation, and reporting utilities for machine-learning projects.
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: scikit-learn
+Requires-Dist: matplotlib
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+
+# ML Testing and Validation Toolkit
+
+This repository contains reusable testing and validation utilities for machine learning projects.
+
+## Motivation
+
+Machine learning projects should not stop at training a model. A practical ML workflow also needs data validation, model testing, performance checks, error analysis, and clear documentation of limitations.
+
+## Planned Features
+
+- Data quality checks
+- Missing-value checks
+- Feature-range checks
+- Prediction-output checks
+- Classification metric reporting
+- Confusion-matrix generation
+- Model-card template
+- Validation checklist
+
+## Use Cases
+
+This toolkit will be applied to:
+
+1. Industrial image defect detection
+2. Sensor predictive maintenance
+
+## Current Status
+
+Project skeleton created. Utility functions and tests will be added in later phases.
