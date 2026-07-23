@@ -19,3 +19,6 @@ Thumbs.db
 # Secrets
 .env
 *.key
+
+# Generated example reports
+example_outputs/
