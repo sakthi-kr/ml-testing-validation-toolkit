@@ -22,3 +22,6 @@ Thumbs.db
 
 # Generated example reports
 example_outputs/
+
+# Generated Python package metadata
+*.egg-info/
