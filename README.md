@@ -2,51 +2,41 @@
 
 [![Validation Toolkit Tests](https://github.com/sakthi-kr/ml-testing-validation-toolkit/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/sakthi-kr/ml-testing-validation-toolkit/actions/workflows/tests.yml)
 
-A reusable Python package for validating machine-learning datasets, predictions,
-probabilities, metrics, confusion matrices, and generated validation reports.
-It is designed for small and medium ML projects where data and model outputs
-should be checked before results are published or consumed by another pipeline.
+A lightweight Python package for validating machine-learning datasets, predictions, probabilities, metrics, confusion matrices, and generated reports.
 
-The toolkit is used by two accompanying industrial ML projects:
+The toolkit is used by the accompanying industrial image defect-detection and sensor predictive-maintenance projects. It provides reusable consistency checks; project-specific questions such as leakage, threshold selection, robustness, and external generalization remain the responsibility of each application.
 
-- [Sensor Predictive Maintenance](https://github.com/sakthi-kr/sensor-predictive-maintenance)
-- [Industrial Image Defect Detection](https://github.com/sakthi-kr/industrial-image-defect-detection)
+## Main Capabilities
 
-## What the toolkit validates
+### Data validation
 
-### Dataset checks
-
-- required columns
-- missing-value fractions
-- infinite values
-- duplicate rows or identifiers
-- allowed categorical values
-- configured numerical ranges
-- minimum class representation
+- required-column checks
+- missing- and infinite-value checks
+- duplicate-row checks
+- allowed categorical-value checks
+- numerical range checks
+- class-representation checks
 - combined dataframe-validation workflows
 
-### Model-output checks
+### Model-output validation
 
-- matching target, prediction, score, and probability lengths
-- allowed target and prediction labels
-- probability-matrix dimensions, finite values, bounds, and row sums
-- score ranges
-- minimum or maximum metric thresholds
-- confusion-matrix consistency
+- target and prediction length consistency
+- allowed prediction-label checks
+- probability-matrix shape and row-sum checks
+- prediction-score range checks
+- metric regression thresholds
+- confusion-matrix consistency checks
 - combined model-output validation workflows
 
 ### Reporting and pipeline control
 
 - readable console summaries
-- strict JSON reports with metadata
-- flat CSV check tables
-- an exception that can stop CI or a pipeline when validation fails
+- structured JSON reports
+- flat CSV validation tables
+- report metadata
+- `ValidationFailureError` for failing automated pipelines
 
 ## Installation
-
-The project uses Python 3.10 or newer.
-
-### Editable development installation
 
 ```bash
 python -m venv .venv
@@ -55,68 +45,39 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
-On PowerShell, activate with:
+The current package version is `0.1.0` and requires Python 3.10 or newer.
 
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-### Use from another local portfolio project
-
-From the consuming project directory:
-
-```bash
-python -m pip install -e ../ml-testing-validation-toolkit
-```
-
-The editable installation keeps the application project connected to the local
-toolkit source while the portfolio is under development.
-
-## Quick start
+## Basic Example
 
 ```python
 import pandas as pd
 
 from ml_validation_toolkit import (
     print_validation_summary,
-    raise_for_validation_failures,
     run_data_checks,
-    save_validation_json,
+    validation_passed,
 )
 
-features = pd.DataFrame(
+frame = pd.DataFrame(
     {
-        "sample_id": ["a", "b", "c"],
-        "rms": [0.2, 0.5, 0.8],
-        "label": ["normal", "fault", "fault"],
+        "score": [0.1, 0.4, 0.9],
+        "label": ["normal", "normal", "defective"],
     }
 )
 
 results = run_data_checks(
-    features,
-    required_columns=["sample_id", "rms", "label"],
-    duplicate_subset=["sample_id"],
-    allowed_values={"label": ["normal", "fault"]},
-    numeric_ranges={"rms": (0.0, 2.0)},
+    frame,
+    required_columns=["score", "label"],
+    allowed_values={"label": ["normal", "defective"]},
+    numeric_ranges={"score": (0.0, 1.0)},
     target_column="label",
 )
 
-print_validation_summary(results, report_name="Feature Table Validation")
-save_validation_json(
-    results,
-    "validation_report.json",
-    report_name="Feature Table Validation",
-)
-raise_for_validation_failures(results)
+print_validation_summary(results, report_name="Example Validation")
+print("Passed:", validation_passed(results))
 ```
 
-Ordinary failed checks return structured `ValidationResult` objects. Calling
-`raise_for_validation_failures` is optional and is intended for automated
-pipelines where a failed check should stop execution.
-
-## Industrial examples
-
-The repository includes three self-contained examples.
+## Included Examples
 
 ### General validation workflow
 
@@ -124,85 +85,85 @@ The repository includes three self-contained examples.
 python examples/example_validation_workflow.py
 ```
 
-### Image anomaly-detection outputs
+This combines reusable data and model checks and generates JSON and CSV reports.
 
-Validates image paths, class labels, anomaly scores, probabilities, aggregate
-metrics, and a confusion matrix:
+### Industrial image anomaly outputs
 
 ```bash
 python examples/validate_image_anomaly_outputs.py
 ```
 
-### Sensor fault-classification outputs
+This self-contained example validates:
 
-Validates recording identifiers, operating loads, feature ranges, four-class
-predictions, probability rows, aggregate metrics, and a confusion matrix:
+- image-record schema and duplicate paths
+- binary labels and anomaly-score ranges
+- binary probability rows
+- accuracy, F1, and AUROC thresholds
+- confusion-matrix consistency
+- JSON and CSV report generation
+
+Outputs are written to:
+
+```text
+example_outputs/image_anomaly/
+```
+
+### Industrial sensor classification
 
 ```bash
 python examples/validate_sensor_classification.py
 ```
 
-Each example writes a JSON report and CSV check table under `example_outputs/`.
-A custom output directory can be supplied to the two industrial examples:
+This self-contained example validates:
+
+- recording identifiers and operating-load metadata
+- sensor-feature ranges
+- four fault classes and predicted labels
+- four-class probability rows and confidence scores
+- accuracy and macro-F1 thresholds
+- confusion-matrix consistency
+- JSON and CSV report generation
+
+Outputs are written to:
+
+```text
+example_outputs/sensor_classification/
+```
+
+## Public API
+
+The package exports reusable functions for:
+
+- data checks through `run_data_checks`
+- model-output checks through `run_model_checks`
+- pass/fail evaluation through `validation_passed`
+- console summaries through `print_validation_summary`
+- JSON and CSV reporting through `save_validation_json` and `save_validation_csv`
+- automated failure handling through `raise_for_validation_failures`
+
+The full exported API is defined in `src/ml_validation_toolkit/__init__.py`.
+
+## Testing and CI
+
+Run the complete suite with:
 
 ```bash
-python examples/validate_image_anomaly_outputs.py --output-dir reports/image
-python examples/validate_sensor_classification.py --output-dir reports/sensor
+pytest
 ```
 
-The examples use deterministic in-memory data. They demonstrate the validation
-contract without requiring the CWRU or MVTec AD datasets.
+GitHub Actions tests the toolkit on Python 3.10 and Python 3.12 for pushes and pull requests to `main`.
 
-## Public API overview
+The test suite includes end-to-end checks for both industrial examples and verifies their generated JSON and CSV reports.
 
-| Area | Main functions |
-|---|---|
-| Data validation | `run_data_checks`, `check_required_columns`, `check_missing_values`, `check_infinite_values`, `check_duplicate_rows`, `check_allowed_values`, `check_numeric_ranges`, `check_class_balance` |
-| Model validation | `run_model_checks`, `check_prediction_lengths`, `check_prediction_labels`, `check_probability_matrix`, `check_score_range`, `check_metric_thresholds`, `check_confusion_matrix_consistency` |
-| Reporting | `print_validation_summary`, `save_validation_json`, `save_validation_csv`, `build_validation_report`, `summarize_validation_results` |
-| Pipeline control | `validation_passed`, `raise_for_validation_failures`, `ValidationFailureError` |
-
-The package version is available as:
-
-```python
-import ml_validation_toolkit
-
-print(ml_validation_toolkit.__version__)
-```
-
-## Testing and continuous integration
-
-Run the complete test suite:
-
-```bash
-python -m pytest
-```
-
-Run the two industrial example tests only:
-
-```bash
-python -m pytest -q tests/test_project_examples.py
-```
-
-GitHub Actions installs the package and runs compilation and tests on Python
-3.10 and Python 3.12 for pushes and pull requests to `main`.
-
-## Documentation assets
-
-- [`docs/validation_checklist.md`](docs/validation_checklist.md) — project-level ML validation checklist
-- [`docs/model_card_template.md`](docs/model_card_template.md) — compact model-card structure
-
-## Repository structure
+## Package Structure
 
 ```text
 ml-testing-validation-toolkit/
 ├── .github/
 │   └── workflows/
 │       └── tests.yml
-├── docs/
-│   ├── model_card_template.md
-│   └── validation_checklist.md
 ├── examples/
+│   ├── __init__.py
 │   ├── example_validation_workflow.py
 │   ├── validate_image_anomaly_outputs.py
 │   └── validate_sensor_classification.py
@@ -213,29 +174,29 @@ ml-testing-validation-toolkit/
 │       ├── model_checks.py
 │       └── reporting.py
 ├── tests/
+│   ├── test_project_examples.py
+│   └── ...
 ├── pyproject.toml
 └── README.md
 ```
 
-## Scope and limitations
+## Project Integrations
 
-Passing these checks means the configured inputs and outputs satisfy the stated
-validation rules. It does **not** by itself prove:
+This toolkit is integrated into:
 
-- model generalization to new machines, products, or operating conditions
-- absence of train/test leakage
-- robustness to distribution shift
+- [`industrial-image-defect-detection`](https://github.com/sakthi-kr/industrial-image-defect-detection)
+- [`sensor-predictive-maintenance`](https://github.com/sakthi-kr/sensor-predictive-maintenance)
+
+The application repositories use the toolkit for reusable feature-table, prediction-output, metric, confusion-matrix, generated-report, and path-portability checks. Domain-specific invariants remain inside their respective projects.
+
+## Scope and Limitations
+
+Passing the configured checks confirms that the inspected data and model outputs are internally consistent. It does not by itself prove:
+
+- model generalization
 - production readiness
-- calibration of probabilities or anomaly scores
-- suitability of a classification or review threshold
-- domain validity of the selected metric limits
+- robustness to distribution changes
+- absence of project-specific data leakage
+- appropriateness of an operating threshold
 
-Those questions require project-specific experimental design, grouped or
-time-aware evaluation where appropriate, failure analysis, and domain review.
-
-## Current status
-
-Version `0.1.0` provides a tested public API for dataframe checks, model-output
-checks, structured reporting, and CI-friendly validation failures. The toolkit
-is intentionally lightweight and is not published to PyPI; it is installed
-locally in editable mode by the two portfolio application repositories.
+Those questions require project-specific experimental design, representative data, and domain validation.
